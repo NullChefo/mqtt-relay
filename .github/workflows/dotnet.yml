@@ -25,7 +25,11 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    - uses: actions/checkout@v4
+        
+    - name: Check Out Response Code
+      uses: actions/checkout@v4
+    - run: echo "The ${{github.repository}} has been cloned to the runner"
+    - run: echo "The workflow is now ready to test your code on the runner"
 # https://github.com/actions/setup-dotnet
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
