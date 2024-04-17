@@ -3,20 +3,25 @@
 
 name: .NET Containerize
 
+# https://github.com/csharpfritz/TagzApp/blob/main/.github/workflows/dotnet.yml
+
 on:
   push:
-    branches: [ "master" ]
+    branches: ["main"]
+#    paths: ["src/**"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["main"]
+    types: [opened, synchronize, reopened, closed]
+#    paths: ["src/**"]
+  workflow_dispatch:
 
 jobs:
-  # Label of the container job
-  deploy:
-    # Containers must run in Linux based operating systems
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+#    defaults:
+#      run:
+#        working-directory: ./src
 
     steps:
     - name: Login to GitHub Container Registry
@@ -28,24 +33,40 @@ jobs:
         
     - name: Check Out Response Code
       uses: actions/checkout@v4
+#      with:
+#        fetch-depth: 0
     - run: echo "The ${{github.repository}} has been cloned to the runner"
     - run: echo "The workflow is now ready to test your code on the runner"
 # https://github.com/actions/setup-dotnet
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.x.x
-        cache: true
-        # cache-dependency-path: '**/package-lock.json'
+        global-json-file: ./global.json
+
+    - name: Cache NuGet Packages
+      id: nuget-packages
+      uses: actions/cache@v3
+      env:
+        cache-name: nuget-package-cache
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-${{ env.cache-name }}
+
     - name: Restore dependencies
-      run: dotnet restore --locked-mode
+      run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+#      working-directory: ./src/MqttRelay.Blazor
     - name: Test
       run: dotnet test --no-build --verbosity normal
+#      working-directory: ./src/MqttRelay.UnitTest
     - name: Containerize
       run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
 
+
+#    - name: Publish
+#      run: dotnet publish --os linux --arch x64 -t:PublishContainer /p:ContainerImageTags='"${{ steps.nbgv_version.outputs.Version }};latest"' /p:ContainerRegistry=ghcr.io
+#      working-directory: ./src/MqttRelay.Blazor
 
       #Deploy the image to the Docker registry
     - name: Docker list images
@@ -59,3 +80,28 @@ jobs:
 
     - name: Push Images to Docker Registry
       run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
+    
+    
+    
+    #playwright:
+    # if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    # name: "Playwright Tests"
+    # runs-on: ubuntu-latest
+    # defaults:
+    #   run:
+    #     working-directory: ./src/MqttRelay.WebTest
+    # timeout-minutes: 10
+    # container:
+    #   image: mcr.microsoft.com/playwright/dotnet:v1.37.1-jammy
+    #   options: --ipc=host
+    # steps:
+    #   - uses: actions/checkout@v3
+    #   - name: Setup dotnet
+    #     uses: actions/setup-dotnet@v3
+    #     with:
+    #       global-json-file: ./global.json
+    #   - run: dotnet build
+    #   - name: Execute Playwright tests
+    #     env:
+    #       TestHostStartDelay: 1000
+    #     run: dotnet test --no-build
