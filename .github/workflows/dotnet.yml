@@ -1,0 +1,56 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET Containerize
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  # Label of the container job
+  deploy:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - uses: actions/checkout@v4
+# https://github.com/actions/setup-dotnet
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        cache: true
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    - name: Containerize
+      run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+
+
+      #Deploy the image to the Docker registry
+    - name: Docker list images
+      run: docker images
+
+    - name: Tag the Docker image
+      run: docker tag mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled
+
+    - name: Tag the Docker image as native
+      run: docker tag ghcr.io/nullchefo/mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled:latest
+
+    - name: Push Images to Docker Registry
+      run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
