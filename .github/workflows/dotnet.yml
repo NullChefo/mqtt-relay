@@ -62,8 +62,7 @@ jobs:
 #      working-directory: ./src/MqttRelay.UnitTest
     - name: Containerize
       # /p:ASPNETCORE_ENVIRONMENT=Production
-      run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
-
+      run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer /p:Environment=Production /p:ASPNETCORE_URLS=http://*:8080
 
 #    - name: Publish
 #      run: dotnet publish --os linux --arch x64 -t:PublishContainer /p:ContainerImageTags='"${{ steps.nbgv_version.outputs.Version }};latest"' /p:ContainerRegistry=ghcr.io
