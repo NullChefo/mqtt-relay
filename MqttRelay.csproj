@@ -7,6 +7,8 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 
+    <IsPublishable>true</IsPublishable>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
 <!--    <ContainerRegistry>registry.mycorp.com:1234</ContainerRegistry>-->
 <!--    <ContainerRepository>my-super-awesome-app</ContainerRepository>-->
 
@@ -21,8 +23,16 @@
 
 <!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
 
+    <PublishTrimmed>true</PublishTrimmed>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
+
+  <ItemGroup>
+    <ContainerPort Include="8080" Type="tcp" />
+<!--    <ContainerEnvironmentVariable Include="ASPNETCORE_URLS" Value="http://+:8080" />-->
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="InfluxDB.Client" Version="4.14.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
