@@ -6,6 +6,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+
+<!--    <ContainerRegistry>registry.mycorp.com:1234</ContainerRegistry>-->
+<!--    <ContainerRepository>my-super-awesome-app</ContainerRepository>-->
+
+<!--    <ContainerImageTag>$(Version)</ContainerImageTag>-->
+    <ContainerImageTags>$(Version);latest</ContainerImageTags>
+
+<!--    <ContainerLabel Include="org.contoso.businessunit" Value="contoso-university" />-->
+<!--    <ContainerWorkingDirectory>/bin</ContainerWorkingDirectory>-->
+
+<!--    https://github.com/dotnet/sdk-container-builds/blob/main/docs/ContainerCustomization.md-->
+    <ContainerPort Include="8080" Type="tcp" />
+
+<!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
+
   </PropertyGroup>
 
   <ItemGroup>
