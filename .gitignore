@@ -9,6 +9,8 @@ bin/*
 obj/*
 .idea
 
+docker-compose-external-hidden.yml
+/docker-compose-external-hidden.yml
 # Common node modules locations
 /node_modules
 /wwwroot/node_modules

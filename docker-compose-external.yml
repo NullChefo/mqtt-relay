@@ -20,16 +20,16 @@
 #    depends_on:
 #      - mqtt
     expose:
-      - "443"
-      - "80"
+      - "8080"
+      - "8081"
     ports:
-      - "443:8001"
-      - "80:4431"
+      - "8080:8080"
+      - "8081:8081"
     # create health check
     labels:
       - "autoheal=true"
     healthcheck:
-      test: curl --fail http://localhost:8001/weatherforecast || exit 1
+      test: curl --fail http://localhost:8080/weatherforecast || exit 1
       interval: 40s
       timeout: 30s
       retries: -1
