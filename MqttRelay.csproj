@@ -17,7 +17,7 @@
 <!--    <ContainerWorkingDirectory>/bin</ContainerWorkingDirectory>-->
 
 <!--    https://github.com/dotnet/sdk-container-builds/blob/main/docs/ContainerCustomization.md-->
-    <ContainerPort Include="8080" Type="tcp" />
+    <ContainerPort>8080</ContainerPort>
 
 <!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
 
