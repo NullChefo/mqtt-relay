@@ -1,0 +1,36 @@
+﻿services:
+  mqtt-relay:
+    image: ghcr.io/nullchefo/mqtt-relay-chiseled
+    pull_policy: always
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+    environment:
+    - INFLUX_TOKEN=token
+    - INFLUX_BUCKET=bucket
+    - INFLUX_ORGANISATION=org
+    - INFLUX_ADDRESS=http://192.168.0.2:8086
+    #MQTT
+    - MQTT_ADDRESS=192.168.0.3
+    - MQTT_PORT=1883
+    - MQTT_USERNAME=mqtt_username
+    - MQTT_PASSWORD=mqtt_password
+    - MQTT_TOPIC=#
+    - MQTT_CLIENT_ID=mqtt_consumer
+#    depends_on:
+#      - mqtt
+    expose:
+      - "443"
+      - "80"
+    ports:
+      - "443:8001"
+      - "80:4431"
+    # create health check
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: curl --fail http://localhost:8080/ || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: -1
+      start_period: 60s

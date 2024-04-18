@@ -61,7 +61,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal
 #      working-directory: ./src/MqttRelay.UnitTest
     - name: Containerize
-      run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+      run:  dotnet publish -c Release /p:PublishTrimmed=true -r linux-x64 /p:PublishSelfContained=true /p:ASPNETCORE_ENVIRONMENT=Production /p:ASPNETCORE_URLS=https://+:443;http://+:80 /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
 
 
 #    - name: Publish
