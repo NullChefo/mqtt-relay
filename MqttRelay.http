@@ -3,4 +3,7 @@
 GET {{MqttRelay_HostAddress}}/weatherforecast/
 Accept: application/json
 
+
 ###
+GET https://localhost:8080/weatherforecast/
+Accept: application/json
