@@ -8,6 +8,8 @@ obj/
 bin/*
 obj/*
 .idea
+run.sh
+/run.sh
 
 docker-compose-external-hidden.yml
 /docker-compose-external-hidden.yml

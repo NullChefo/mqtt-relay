@@ -22,22 +22,27 @@
 <!--    <ContainerPort>8080</ContainerPort>-->
 
 <!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
-
-    <PublishTrimmed>true</PublishTrimmed>
-    <SelfContained>true</SelfContained>
+<!--    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>-->
+    
+<!--    <PublishTrimmed>true</PublishTrimmed>-->
+<!--    <SelfContained>true</SelfContained>-->
+    <UserSecretsId>14127855-79b9-43bc-aa6b-ce980f9dddf0</UserSecretsId>
   </PropertyGroup>
 
 
   <ItemGroup>
     <ContainerPort Include="8080" Type="tcp" />
-    <ContainerEnvironmentVariable Include="ASPNETCORE_URLS" Value="http://+:8080" />
+<!--    <ContainerPort Include="8081" Type="tcp" />-->
+<!--    <ContainerEnvironmentVariable Include="ASPNETCORE_URLS" Value="http://+:8080;https://+:8081" />-->
   </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="InfluxDB.Client" Version="4.14.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
+    <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.204" />
     <PackageReference Include="MQTTnet" Version="4.3.3.952" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
 </Project>
