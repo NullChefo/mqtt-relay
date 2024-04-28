@@ -5,164 +5,71 @@ using InfluxDB.Client.Writes;
 using MQTTnet;
 using MQTTnet.Client;
 using MqttRelay.Exceptions;
+using MqttRelay.Model;
 using Newtonsoft.Json.Linq;
 
 namespace MqttRelay.Services;
 
-public class MqttToInfluxDbBackgroundService : IHostedService
+public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
 {
-    private readonly string _address;
-    private readonly int _port;
-    private readonly string _clientId;
-    private readonly string _username;
-    private readonly string _password;
-    private readonly string _topic;
 
-    private readonly string _influxDbAddress;
-    private readonly string _influxDbToken;
-    private readonly string _influxDbBucket;
-    private readonly string _influxDbOrganization;
-
-    private readonly ILogger<MqttToInfluxDbBackgroundService> _logger;
-    private IMqttClient _mqttClient;
-    private InfluxDBClient _influxDbClient;
-    private MqttClientOptions _mqttClientOptions;
-
+    private  readonly MqttSecrets _mqttSecrets;
+    private  readonly InfluxDbSecrets _influxDbSecrets;
+    
+    
+    private  readonly ILogger<MqttToInfluxDbBackgroundService> _logger;
+    private  readonly IMqttClient _mqttClient;
+    private  readonly InfluxDBClient _influxDbClient;
+    private  readonly MqttClientOptions _mqttClientOptions;
     // https://www.linkedin.com/pulse/using-influxdb-c-amir-doosti-dbklf/
 
     public MqttToInfluxDbBackgroundService(ILogger<MqttToInfluxDbBackgroundService> logger)
     {
         _logger = logger;
 
-        var influxDbTokenEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_TOKEN")!;
-        if (influxDbTokenEnvironmentVariable == "")
+        if (_mqttSecrets == null)
         {
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbTokenEnvironmentVariable));
-        }
-        else
-        {
-            _influxDbToken = influxDbTokenEnvironmentVariable;
+            _mqttSecrets = new MqttSecrets();
         }
 
-        var influxDbAddressEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ADDRESS")!;
-        if (influxDbAddressEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbAddressEnvironmentVariable));
-        else
+        if (_influxDbSecrets == null)
         {
-            _influxDbAddress = influxDbAddressEnvironmentVariable;
+            _influxDbSecrets = new InfluxDbSecrets();
         }
 
-        var influxDbBucketEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_BUCKET")!;
-        if (influxDbBucketEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbBucketEnvironmentVariable));
-        else
+        if (_mqttClient == null)
         {
-            _influxDbBucket = influxDbBucketEnvironmentVariable;
+            var factory = new MqttFactory();
+            _mqttClient = factory.CreateMqttClient();
+        }
+        
+        if (_mqttClientOptions == null)
+        {
+            
+            _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_mqttSecrets.Address, _mqttSecrets.Port).WithClientId(_mqttSecrets.ClientId)
+            .WithCredentials(_mqttSecrets.Username, _mqttSecrets.Password).Build();
         }
 
-        var influxDbOrganizationEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ORGANIZATION")!;
-        if (influxDbOrganizationEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbOrganizationEnvironmentVariable));
-        else
+
+        if (_influxDbClient == null)
         {
-            _influxDbOrganization = influxDbOrganizationEnvironmentVariable;
+            _influxDbClient = new InfluxDBClient(_influxDbSecrets.Address, _influxDbSecrets.Token);
         }
 
-        var addressEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_ADDRESS")!;
-        if (addressEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(addressEnvironmentVariable));
-        else
-        {
-            _address = addressEnvironmentVariable;
-        }
 
-        var portEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_PORT")!;
-        if (portEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(portEnvironmentVariable));
-        else
-        {
-            //try to parse first if not int throw exception
-            if (!int.TryParse(portEnvironmentVariable, out _))
-            {
-                throw new EnvironmentVariableNotConfigured(nameof(portEnvironmentVariable));
-            }
-
-            _port = int.Parse(portEnvironmentVariable);
-        }
-
-        var clientIdEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_CLIENT_ID")!;
-        if (clientIdEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(clientIdEnvironmentVariable));
-        else
-        {
-            _clientId = clientIdEnvironmentVariable;
-        }
-
-        var usernameEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_USERNAME")!;
-        if (usernameEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(usernameEnvironmentVariable));
-        else
-        {
-            _username = usernameEnvironmentVariable;
-        }
-
-        var passwordEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_PASSWORD")!;
-        if (passwordEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(passwordEnvironmentVariable));
-        else
-        {
-            _password = passwordEnvironmentVariable;
-        }
-
-        var topicEnvironmentVariable = Environment.GetEnvironmentVariable("MQTT_TOPIC")!;
-        if (topicEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(topicEnvironmentVariable));
-        else
-        {
-            _topic = topicEnvironmentVariable;
-        }
-
-        var factory = new MqttFactory();
-        _mqttClient = factory.CreateMqttClient();
-        _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_address, _port).WithClientId(_clientId)
-            .WithCredentials(_username, _password).Build();
-        _influxDbClient = new InfluxDBClient(_influxDbAddress, _influxDbToken);
+        
     }
 
-    private void MqttConnect()
-    {
-        var factory = new MqttFactory();
-        _mqttClient = factory.CreateMqttClient();
-        _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_address, _port).WithClientId(_clientId)
-            .WithCredentials(_username, _password).Build();
-        _influxDbClient = new InfluxDBClient(_influxDbAddress, _influxDbToken);
-
-        _mqttClient.ConnectAsync(_mqttClientOptions).ContinueWith(async e =>
-        {
-            _logger.LogInformation("Connected to MQTT broker");
-            var topicFilter = new MqttTopicFilterBuilder().WithTopic(_topic).Build();
-            await _mqttClient.SubscribeAsync(
-                new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build());
-        });
-    }
 
 
     private Task StartAsync2(CancellationToken cancellationToken)
     {
-        if (!_mqttClient.IsConnected)
-        {
-            MqttConnect();
-            _mqttClient.ConnectAsync(_mqttClientOptions, cancellationToken);
-        }
-
-
-        _influxDbClient.PingAsync();
 
         _mqttClient.ApplicationMessageReceivedAsync += e =>
         {
-            var stringValue = e.ApplicationMessage.ConvertPayloadToString();
-
-            var topic = e.ApplicationMessage.Topic;
+            
+            string topic = e.ApplicationMessage.Topic;
+            string payload = e.ApplicationMessage.ConvertPayloadToString();
 
 
             // trying to escape blobs 
@@ -172,12 +79,12 @@ public class MqttToInfluxDbBackgroundService : IHostedService
             }
 
             // trying to parse it as a json
-            JObject json = null;
+            JObject? json = null;
             try
             {
-                json = JObject.Parse(stringValue);
+                json = JObject.Parse(payload);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 // non critical exception
             }
@@ -189,14 +96,14 @@ public class MqttToInfluxDbBackgroundService : IHostedService
 
             try
             {
-                parsedDouble = double.Parse(stringValue);
+                parsedDouble = double.Parse(payload);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 // non critical exception
             }
 
-            PointData point;
+            PointData? point;
 
             if (!Double.IsNaN(parsedDouble))
             {
@@ -226,32 +133,32 @@ public class MqttToInfluxDbBackgroundService : IHostedService
                 lineStringBuilder.Append(((DateTimeOffset)currentTime).ToUnixTimeSeconds());
 
 
-                _logger.LogInformation("The string value of the below is: \n : {StringValue}", stringValue);
+                _logger.LogDebug("The string value of the below is: \n : {StringValue}", payload);
 
                 // we supply the value after the statment aka segregation of values 
-                _logger.LogInformation("The json value is: \n {JsonValue}", lineStringBuilder.ToString());
+                _logger.LogDebug("The json value is: \n {JsonValue}", lineStringBuilder.ToString());
 
 
                 _influxDbClient.GetWriteApiAsync().WriteRecordAsync(record: lineStringBuilder.ToString(),
-                    bucket: _influxDbBucket, org: _influxDbBucket, cancellationToken: cancellationToken);
+                    bucket: _influxDbSecrets.Bucket, org: _influxDbSecrets.Organization, cancellationToken: cancellationToken);
             }
             else
             {
                 point = null;
-
-                _logger.LogInformation("This topic is string: {Topic} with message", stringValue);
+                _logger.LogDebug("This topic is string: {Topic} with message", payload);
             }
 
             if (point != null)
             {
-                _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket: _influxDbBucket,
-                    org: _influxDbOrganization, cancellationToken: cancellationToken);
+                _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket:  _influxDbSecrets.Bucket,
+                    org:  _influxDbSecrets.Organization, cancellationToken: cancellationToken);
+                GC.Collect();
             }
 
-            // Console.WriteLine(e.ApplicationMessage.ConvertPayloadToString());
-
+            GC.Collect();
             return Task.CompletedTask;
         };
+        GC.Collect();
         return Task.CompletedTask;
     }
 
@@ -280,32 +187,39 @@ public class MqttToInfluxDbBackgroundService : IHostedService
                             _logger.LogInformation("The MQTT client is connected");
                         }
 
-                        var topicFilter = new MqttTopicFilterBuilder().WithTopic(_topic).Build();
+                        var topicFilter = new MqttTopicFilterBuilder().WithTopic(_mqttSecrets.Topic).Build();
                         await _mqttClient.SubscribeAsync(
                             new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build(),
                             cancellationToken);
 
                         await StartAsync2(cancellationToken);
+                        GC.Collect();
                     }
                     catch (Exception ex)
                     {
                         // Handle the exception properly (logging etc.).
                         _logger.LogError(ex, "The MQTT client  connection failed");
+                        GC.Collect();
                     }
                     finally
                     {
                         // Check the connection state every 5 seconds and perform a reconnect if required.
                         await Task.Delay(TimeSpan.FromSeconds(5));
+                        GC.Collect();
                     }
+                    GC.Collect();
                 }
+                
             });
+        GC.Collect();
     }
 
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         // Code to execute when the application stops
-        Console.WriteLine("Application stopping. Performing cleanup tasks...");
+        // Console.WriteLine("Application stopping. Performing cleanup tasks...");
+        Dispose();
         return Task.CompletedTask;
     }
 
@@ -322,7 +236,7 @@ public class MqttToInfluxDbBackgroundService : IHostedService
             }
             else if (property.Value.Type == JTokenType.Array)
             {
-                Console.WriteLine("This is an array: " + property.Value.ToString());
+                // Console.WriteLine("This is an array: " + property.Value.ToString());
             }
             else
             {
@@ -344,5 +258,24 @@ public class MqttToInfluxDbBackgroundService : IHostedService
         }
 
         return sb.ToString();
+    }
+
+    public void Dispose()
+    {
+        _logger.LogDebug("Disposing");
+        _mqttClient.Dispose();
+        _influxDbClient.Dispose();
+        GC.SuppressFinalize(this);
+        _logger.LogDebug("Disposed");
+        // _mqttClient = null;
+        // _influxDbClient = null;
+        // _mqttClientOptions = null;
+        // _logger = null;
+        // _mqttSecrets = null;
+        // _influxDbSecrets = null;
+
+        
+        GC.Collect();
+        
     }
 }
