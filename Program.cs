@@ -30,6 +30,14 @@ builder.Services.AddSwaggerGen();
 // the background service
 builder.Services.AddHostedService<MqttToInfluxDbBackgroundService>();
 
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.ServicesStartConcurrently = true;
+    options.ServicesStopConcurrently = true;
+
+
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -38,6 +46,7 @@ var app = builder.Build();
 //     app.UseSwagger();
 //     app.UseSwaggerUI();
 // }
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
