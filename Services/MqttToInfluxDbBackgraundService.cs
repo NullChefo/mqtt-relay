@@ -22,7 +22,6 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
     private  readonly InfluxDBClient _influxDbClient;
     private  readonly MqttClientOptions _mqttClientOptions;
     // https://www.linkedin.com/pulse/using-influxdb-c-amir-doosti-dbklf/
-
     public MqttToInfluxDbBackgroundService(ILogger<MqttToInfluxDbBackgroundService> logger)
     {
         _logger = logger;
@@ -152,13 +151,13 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
             {
                 _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket:  _influxDbSecrets.Bucket,
                     org:  _influxDbSecrets.Organization, cancellationToken: cancellationToken);
-                GC.Collect();
+                // GC.Collect();
             }
 
-            GC.Collect();
+            // GC.Collect();
             return Task.CompletedTask;
         };
-        GC.Collect();
+        // GC.Collect();
         return Task.CompletedTask;
     }
 
@@ -207,11 +206,11 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
                         await Task.Delay(TimeSpan.FromSeconds(5));
                         GC.Collect();
                     }
-                    GC.Collect();
+                    // GC.Collect();
                 }
                 
             });
-        GC.Collect();
+        // GC.Collect();
     }
 
 
