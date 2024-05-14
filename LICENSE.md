@@ -1,7 +1,10 @@
 **Non-Commercial, Non-AI, and Non-ML Software License (NCNAML)**
+
 Version 1.1, May 14, 2024
 
+
 **Copyright (c) 2024 Stefan Kehayov**
+
 
 **Grant of License:**
 
