@@ -24,3 +24,13 @@ In no event shall the author or copyright holders be liable for any claim, damag
 **General Terms:**
 
 By using the Software, you agree to be bound by the terms of this license. This license is governed by the laws of the jurisdiction in which the Software was obtained.
+
+
+**Contact**
+
+For questions about licensing or any other inquiries, please contact:
+
+Stefan Kehayov
+
+stefan@nullchefo.com
+
