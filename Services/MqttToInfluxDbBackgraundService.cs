@@ -4,7 +4,6 @@ using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Writes;
 using MQTTnet;
 using MQTTnet.Client;
-using MqttRelay.Exceptions;
 using MqttRelay.Model;
 using Newtonsoft.Json.Linq;
 
@@ -12,15 +11,12 @@ namespace MqttRelay.Services;
 
 public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
 {
-
-    private  readonly MqttSecrets _mqttSecrets;
-    private  readonly InfluxDbSecrets _influxDbSecrets;
-    
-    
-    private  readonly ILogger<MqttToInfluxDbBackgroundService> _logger;
-    private  readonly IMqttClient _mqttClient;
-    private  readonly InfluxDBClient _influxDbClient;
-    private  readonly MqttClientOptions _mqttClientOptions;
+    private readonly MqttSecrets _mqttSecrets;
+    private readonly InfluxDbSecrets _influxDbSecrets;
+    private readonly ILogger<MqttToInfluxDbBackgroundService> _logger;
+    private readonly IMqttClient _mqttClient;
+    private readonly InfluxDBClient _influxDbClient;
+    private readonly MqttClientOptions _mqttClientOptions;
     // https://www.linkedin.com/pulse/using-influxdb-c-amir-doosti-dbklf/
     public MqttToInfluxDbBackgroundService(ILogger<MqttToInfluxDbBackgroundService> logger)
     {
@@ -41,35 +37,25 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
             var factory = new MqttFactory();
             _mqttClient = factory.CreateMqttClient();
         }
-        
+
         if (_mqttClientOptions == null)
         {
-            
             _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_mqttSecrets.Address, _mqttSecrets.Port).WithClientId(_mqttSecrets.ClientId)
             .WithCredentials(_mqttSecrets.Username, _mqttSecrets.Password).Build();
         }
-
 
         if (_influxDbClient == null)
         {
             _influxDbClient = new InfluxDBClient(_influxDbSecrets.Address, _influxDbSecrets.Token);
         }
-
-
-        
-    }
-
-
-
+    } 
     private Task StartAsync2(CancellationToken cancellationToken)
     {
-
         _mqttClient.ApplicationMessageReceivedAsync += e =>
         {
-            
+
             string topic = e.ApplicationMessage.Topic;
             string payload = e.ApplicationMessage.ConvertPayloadToString();
-
 
             // trying to escape blobs 
             if (topic.Contains("snapshot"))
@@ -87,7 +73,6 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
             {
                 // non critical exception
             }
-
 
             // try to parse it as float
 
@@ -131,12 +116,10 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
 
                 lineStringBuilder.Append(((DateTimeOffset)currentTime).ToUnixTimeSeconds());
 
-
                 _logger.LogDebug("The string value of the below is: \n : {StringValue}", payload);
 
                 // we supply the value after the statment aka segregation of values 
                 _logger.LogDebug("The json value is: \n {JsonValue}", lineStringBuilder.ToString());
-
 
                 _influxDbClient.GetWriteApiAsync().WriteRecordAsync(record: lineStringBuilder.ToString(),
                     bucket: _influxDbSecrets.Bucket, org: _influxDbSecrets.Organization, cancellationToken: cancellationToken);
@@ -149,8 +132,8 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
 
             if (point != null)
             {
-                _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket:  _influxDbSecrets.Bucket,
-                    org:  _influxDbSecrets.Organization, cancellationToken: cancellationToken);
+                _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket: _influxDbSecrets.Bucket,
+                    org: _influxDbSecrets.Organization, cancellationToken: cancellationToken);
                 // GC.Collect();
             }
 
@@ -208,7 +191,7 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
                     }
                     // GC.Collect();
                 }
-                
+
             });
         // GC.Collect();
     }
@@ -250,12 +233,10 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
                 }
             }
         }
-
         if (sb.Length > 1)
         {
-            sb.Length -= 1; // Remove the last comma 
+            sb.Length -= 1; // Remove the last 
         }
-
         return sb.ToString();
     }
 
@@ -272,9 +253,6 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
         // _logger = null;
         // _mqttSecrets = null;
         // _influxDbSecrets = null;
-
-        
         GC.Collect();
-        
     }
 }
