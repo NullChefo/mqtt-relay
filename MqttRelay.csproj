@@ -12,8 +12,8 @@
 <!--    <ContainerRegistry>registry.mycorp.com:1234</ContainerRegistry>-->
 <!--    <ContainerRepository>my-super-awesome-app</ContainerRepository>-->
 
-<!--    <ContainerImageTag>$(Version)</ContainerImageTag>-->
-    <ContainerImageTags>$(Version);latest</ContainerImageTags>
+<!--    <ContainerImageTag>$(Version);latest</ContainerImageTag>-->
+    <ContainerImageTags>$(Version)</ContainerImageTags>
 
 <!--    <ContainerLabel Include="org.contoso.businessunit" Value="contoso-university" />-->
 <!--    <ContainerWorkingDirectory>/bin</ContainerWorkingDirectory>-->
