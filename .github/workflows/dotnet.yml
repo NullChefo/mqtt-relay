@@ -71,12 +71,12 @@ jobs:
 
     - name: Containerize-x64
       # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
-      run:  dotnet publish -c Release --os linux --arch x64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+      run:  dotnet publish -c Release --os linux --arch x64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer /p:ContainerRepository=mqtt-relay-chiseled
       
       
     - name: Containerize-arm64
       # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
-      run:  dotnet publish -c Release --os linux --arch arm64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+      run:  dotnet publish -c Release --os linux --arch arm64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer /p:ContainerRepository=mqtt-relay-chiseled
       
       
       #    - name: Publish
