@@ -66,9 +66,14 @@ jobs:
 #      # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
 #      run:  dotnet publish /p:PublishTrimmed=true /p:PublishSelfContained=true -c Release --os linux --arch x64 /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer 
 
-    - name: Containerize
+    - name: Containerize-x64
       # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
-      run:  dotnet publish -c Release --os linux --arch x64 /p:ContainerFamily=alpine /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+      run:  dotnet publish -c Release --os linux --arch x64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
+      
+      
+    - name: Containerize-arm64
+      # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
+      run:  dotnet publish -c Release --os linux --arch arm64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /p:ContainerRepository=mqtt-relay-chiseled /t:PublishContainer
       
       
       #    - name: Publish
@@ -79,14 +84,27 @@ jobs:
     - name: Docker list images
       run: docker images
 
-    - name: Tag the Docker image
-      run: docker tag mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled
 
-    - name: Tag the Docker image as native
-      run: docker tag ghcr.io/nullchefo/mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled:latest
+    - name: Create Dockerfile
+      run: |
+        cat > Dockerfile <<EOF
+        FROM mqtt-relay-chiseled
+        EOF
 
-    - name: Push Images to Docker Registry
-      run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
+    - name: Build and push multi-arch Docker image
+      run: |
+        docker buildx build --platform linux/amd64,linux/arm64 \
+        -t ghcr.io/nullchefo/mqtt-relay-chiseled:latest \
+        --push .
+
+#    - name: Tag the Docker image
+#      run: docker tag mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled
+#
+#    - name: Tag the Docker image as native
+#      run: docker tag ghcr.io/nullchefo/mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled:latest
+#
+#    - name: Push Images to Docker Registry
+#      run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
     
     
     
