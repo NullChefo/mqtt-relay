@@ -88,26 +88,14 @@ jobs:
       run: docker images
 
 
-    - name: Create Dockerfile
-      run: |
-        cat > Dockerfile <<EOF
-        FROM mqtt-relay-chiseled:latest
-        EOF
+    - name: Tag the Docker image
+      run: docker tag mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled
 
-    - name: Build and push multi-arch Docker image
-      run: |
-        docker buildx build --platform linux/amd64,linux/arm64 \
-        -t ghcr.io/nullchefo/mqtt-relay-chiseled:latest \
-        --push .
+    - name: Tag the Docker image as native
+      run: docker tag ghcr.io/nullchefo/mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled:latest
 
-#    - name: Tag the Docker image
-#      run: docker tag mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled
-#
-#    - name: Tag the Docker image as native
-#      run: docker tag ghcr.io/nullchefo/mqtt-relay-chiseled ghcr.io/nullchefo/mqtt-relay-chiseled:latest
-#
-#    - name: Push Images to Docker Registry
-#      run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
+    - name: Push Images to Docker Registry
+      run: docker push -a ghcr.io/nullchefo/mqtt-relay-chiseled
     
     
     
