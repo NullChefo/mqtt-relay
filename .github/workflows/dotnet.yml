@@ -48,8 +48,8 @@ jobs:
       with:
         global-json-file: ./global.json
         
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+#    - name: Set up Docker Buildx
+#      uses: docker/setup-buildx-action@v1
       
     - name: Cache NuGet Packages
       id: nuget-packages
@@ -76,12 +76,12 @@ jobs:
 
     - name: Containerize-x64
       # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
-      run:  dotnet publish -c Release --os linux --arch x64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra -p:ContainerImageTag=${{ env.TAG }}-x64 -p:ContainerRepository=${{ env.IMAGE }} -p:ContainerRegistry=${{ env.REGISTRY }}
+      run:  dotnet publish -c Release --os linux --arch x64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /t:PublishContainer  -p:ContainerImageTag=${{ env.TAG }}-x64 -p:ContainerRepository=${{ env.IMAGE }} -p:ContainerRegistry=${{ env.REGISTRY }}
       
 
     - name: Containerize-arm64
       # /p:Environment=Production  /p:ASPNETCORE_ENVIRONMENT=Production 
-      run: dotnet publish -c Release --os linux --arch arm64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra -p:ContainerImageTag=${{ env.TAG }}-arm64 -p:ContainerRepository=${{ env.IMAGE }} -p:ContainerRegistry=${{ env.REGISTRY }}
+      run: dotnet publish -c Release --os linux --arch arm64 /p:PublishTrimmed=true /p:PublishSelfContained=true /p:ContainerFamily=jammy-chiseled-extra /t:PublishContainer -p:ContainerImageTag=${{ env.TAG }}-arm64 -p:ContainerRepository=${{ env.IMAGE }} -p:ContainerRegistry=${{ env.REGISTRY }}
       
       
       
