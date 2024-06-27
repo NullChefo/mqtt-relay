@@ -91,7 +91,7 @@ jobs:
     - name: Create Dockerfile
       run: |
         cat > Dockerfile <<EOF
-        FROM mqtt-relay-chiseled
+        FROM mqtt-relay-chiseled:latest
         EOF
 
     - name: Build and push multi-arch Docker image
