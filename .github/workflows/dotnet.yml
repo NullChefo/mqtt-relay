@@ -42,7 +42,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         global-json-file: ./global.json
-
+        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      
     - name: Cache NuGet Packages
       id: nuget-packages
       uses: actions/cache@v3
