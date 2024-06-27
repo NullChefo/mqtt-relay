@@ -4,57 +4,36 @@ namespace MqttRelay.Model;
 
 public class InfluxDbSecrets
 {
-    private string influxDbAddress;
-    private string influxDbToken;
-    private string influxDbBucket;
-    private string influxDbOrganization;
+    public InfluxDbSecrets()
+    {
+        var influxDbTokenEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_TOKEN")!;
+        if (influxDbTokenEnvironmentVariable == "")
+            throw new EnvironmentVariableNotConfigured(nameof(influxDbTokenEnvironmentVariable));
+        Token = influxDbTokenEnvironmentVariable;
 
+        var influxDbAddressEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ADDRESS")!;
+        if (influxDbAddressEnvironmentVariable == "")
+            throw new EnvironmentVariableNotConfigured(nameof(influxDbAddressEnvironmentVariable));
+        Address = influxDbAddressEnvironmentVariable;
+
+        var influxDbBucketEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_BUCKET")!;
+        if (influxDbBucketEnvironmentVariable == "")
+            throw new EnvironmentVariableNotConfigured(nameof(influxDbBucketEnvironmentVariable));
+        Bucket = influxDbBucketEnvironmentVariable;
+
+        var influxDbOrganizationEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ORGANIZATION")!;
+        if (influxDbOrganizationEnvironmentVariable == "")
+            throw new EnvironmentVariableNotConfigured(nameof(influxDbOrganizationEnvironmentVariable));
+        Organization = influxDbOrganizationEnvironmentVariable;
+    }
 
 
     // Getters
-    public string Address => influxDbAddress;
-    public string Token => influxDbToken;
-    public string Bucket => influxDbBucket;
-    public string Organization => influxDbOrganization;
+    public string Address { get; }
 
+    public string Token { get; }
 
+    public string Bucket { get; }
 
-
-    public InfluxDbSecrets()
-    {
-        string influxDbTokenEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_TOKEN")!;
-        if (influxDbTokenEnvironmentVariable == "")
-        {
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbTokenEnvironmentVariable));
-        }
-        else
-        {
-            influxDbToken = influxDbTokenEnvironmentVariable;
-        }
-
-        string influxDbAddressEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ADDRESS")!;
-        if (influxDbAddressEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbAddressEnvironmentVariable));
-        else
-        {
-            influxDbAddress = influxDbAddressEnvironmentVariable;
-        }
-
-        string influxDbBucketEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_BUCKET")!;
-        if (influxDbBucketEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbBucketEnvironmentVariable));
-        else
-        {
-            influxDbBucket = influxDbBucketEnvironmentVariable;
-        }
-
-        string influxDbOrganizationEnvironmentVariable = Environment.GetEnvironmentVariable("INFLUX_ORGANIZATION")!;
-        if (influxDbOrganizationEnvironmentVariable == "")
-            throw new EnvironmentVariableNotConfigured(nameof(influxDbOrganizationEnvironmentVariable));
-        else
-        {
-            influxDbOrganization = influxDbOrganizationEnvironmentVariable;
-        }
-    }
-
+    public string Organization { get; }
 }

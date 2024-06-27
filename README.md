@@ -2,20 +2,18 @@
 
 Parse MQTT messages and dynamically proccess them and store them into InfluxDB
 
-
-
 # Commands uses
 
-## influxDB client 
-dotnet add package InfluxDB.Client
+## influxDB client
 
+dotnet add package InfluxDB.Client
 
 ## if needed Coravel package to schedule background jobs easily:
 
 dotnet add package Coravel
 
-
 ## Add the dotnet mqtt
+
 ```bash
 dotnet add package MQTTnet
 ```
@@ -57,7 +55,6 @@ namespace Examples
 
 ```
 
-
 ## Write Data
 
 ### Option 1: Use InfluxDB Line Protocol to write data
@@ -70,7 +67,6 @@ using (var writeApi = client.GetWriteApi())
 }
 
 ```
-
 
 ### Option 2: Use a Data Point to write data
 
@@ -89,9 +85,7 @@ using (var writeApi = client.GetWriteApi())
 
 ```
 
-
 ### Option 3: Use POCO and corresponding class to write data
-
 
 ```dotnet
 var mem = new Mem { Host = "host1", UsedPercent = 23.43234543, Time = DateTime.UtcNow };
@@ -111,8 +105,6 @@ private class Mem
 }
 
 ```
-
-
 
 ### Execute a Flux query
 

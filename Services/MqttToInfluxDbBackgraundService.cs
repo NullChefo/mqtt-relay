@@ -11,26 +11,22 @@ namespace MqttRelay.Services;
 
 public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
 {
-    private readonly MqttSecrets _mqttSecrets;
+    private readonly InfluxDBClient _influxDbClient;
     private readonly InfluxDbSecrets _influxDbSecrets;
     private readonly ILogger<MqttToInfluxDbBackgroundService> _logger;
     private readonly IMqttClient _mqttClient;
-    private readonly InfluxDBClient _influxDbClient;
     private readonly MqttClientOptions _mqttClientOptions;
+
+    private readonly MqttSecrets _mqttSecrets;
+
     // https://www.linkedin.com/pulse/using-influxdb-c-amir-doosti-dbklf/
     public MqttToInfluxDbBackgroundService(ILogger<MqttToInfluxDbBackgroundService> logger)
     {
         _logger = logger;
 
-        if (_mqttSecrets == null)
-        {
-            _mqttSecrets = new MqttSecrets();
-        }
+        if (_mqttSecrets == null) _mqttSecrets = new MqttSecrets();
 
-        if (_influxDbSecrets == null)
-        {
-            _influxDbSecrets = new InfluxDbSecrets();
-        }
+        if (_influxDbSecrets == null) _influxDbSecrets = new InfluxDbSecrets();
 
         if (_mqttClient == null)
         {
@@ -39,109 +35,28 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
         }
 
         if (_mqttClientOptions == null)
-        {
-            _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_mqttSecrets.Address, _mqttSecrets.Port).WithClientId(_mqttSecrets.ClientId)
-            .WithCredentials(_mqttSecrets.Username, _mqttSecrets.Password).Build();
-        }
+            _mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(_mqttSecrets.Address, _mqttSecrets.Port)
+                .WithClientId(_mqttSecrets.ClientId)
+                .WithCredentials(_mqttSecrets.Username, _mqttSecrets.Password).Build();
 
         if (_influxDbClient == null)
-        {
             _influxDbClient = new InfluxDBClient(_influxDbSecrets.Address, _influxDbSecrets.Token);
-        }
-    } 
-    private Task StartAsync2(CancellationToken cancellationToken)
+    }
+
+    public void Dispose()
     {
-        _mqttClient.ApplicationMessageReceivedAsync += e =>
-        {
-
-            string topic = e.ApplicationMessage.Topic;
-            string payload = e.ApplicationMessage.ConvertPayloadToString();
-
-            // trying to escape blobs 
-            if (topic.Contains("snapshot"))
-            {
-                return Task.CompletedTask;
-            }
-
-            // trying to parse it as a json
-            JObject? json = null;
-            try
-            {
-                json = JObject.Parse(payload);
-            }
-            catch (Exception)
-            {
-                // non critical exception
-            }
-
-            // try to parse it as float
-
-            double parsedDouble = Double.NaN;
-
-            try
-            {
-                parsedDouble = double.Parse(payload);
-            }
-            catch (Exception)
-            {
-                // non critical exception
-            }
-
-            PointData? point;
-
-            if (!Double.IsNaN(parsedDouble))
-            {
-                point = PointData
-                    .Measurement(topic)
-                    .Field("value", parsedDouble)
-                    .Timestamp(DateTime.UtcNow, WritePrecision.Ns)
-                    .Tag("topic", topic);
-            }
-
-            // trying to use the InfluxDB Line Protocol
-            else if (json != null)
-            {
-                point = null;
-
-                // const string line = "temperature,city=Paris temperature=25.15, {timestamp}";
-                StringBuilder lineStringBuilder = new StringBuilder();
-                lineStringBuilder.Append(topic).Append(',').Append("topic=")
-                    .Append(topic).Append(' ');
-
-                lineStringBuilder.Append(ProcessJson(json));
-
-                lineStringBuilder.Append(' ');
-
-                DateTime currentTime = DateTime.Now;
-
-                lineStringBuilder.Append(((DateTimeOffset)currentTime).ToUnixTimeSeconds());
-
-                _logger.LogDebug("The string value of the below is: \n : {StringValue}", payload);
-
-                // we supply the value after the statment aka segregation of values 
-                _logger.LogDebug("The json value is: \n {JsonValue}", lineStringBuilder.ToString());
-
-                _influxDbClient.GetWriteApiAsync().WriteRecordAsync(record: lineStringBuilder.ToString(),
-                    bucket: _influxDbSecrets.Bucket, org: _influxDbSecrets.Organization, cancellationToken: cancellationToken);
-            }
-            else
-            {
-                point = null;
-                _logger.LogDebug("This topic is string: {Topic} with message", payload);
-            }
-
-            if (point != null)
-            {
-                _influxDbClient.GetWriteApiAsync().WritePointAsync(point: point, bucket: _influxDbSecrets.Bucket,
-                    org: _influxDbSecrets.Organization, cancellationToken: cancellationToken);
-                // GC.Collect();
-            }
-
-            // GC.Collect();
-            return Task.CompletedTask;
-        };
-        // GC.Collect();
-        return Task.CompletedTask;
+        _logger.LogDebug("Disposing");
+        _mqttClient.Dispose();
+        _influxDbClient.Dispose();
+        GC.SuppressFinalize(this);
+        _logger.LogDebug("Disposed");
+        // _mqttClient = null;
+        // _influxDbClient = null;
+        // _mqttClientOptions = null;
+        // _logger = null;
+        // _mqttSecrets = null;
+        // _influxDbSecrets = null;
+        GC.Collect();
     }
 
 
@@ -158,7 +73,6 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
             {
                 // // User proper cancellation and no while(true).
                 while (true)
-                {
                     try
                     {
                         // This code will also do the very first connect! So no call to _ConnectAsync_ is required in the first place.
@@ -189,9 +103,7 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
                         await Task.Delay(TimeSpan.FromSeconds(5));
                         GC.Collect();
                     }
-                    // GC.Collect();
-                }
-
+                // GC.Collect();
             });
         // GC.Collect();
     }
@@ -205,12 +117,100 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
         return Task.CompletedTask;
     }
 
-    // Assuming json is a JObject containing the nested JSON structure
-    private static String ProcessJson(JObject json)
+    private Task StartAsync2(CancellationToken cancellationToken)
     {
-        StringBuilder sb = new StringBuilder();
-        foreach (var property in json.Properties())
+        _mqttClient.ApplicationMessageReceivedAsync += e =>
         {
+            var topic = e.ApplicationMessage.Topic;
+            var payload = e.ApplicationMessage.ConvertPayloadToString();
+
+            // trying to escape blobs 
+            if (topic.Contains("snapshot")) return Task.CompletedTask;
+
+            // trying to parse it as a json
+            JObject? json = null;
+            try
+            {
+                json = JObject.Parse(payload);
+            }
+            catch (Exception)
+            {
+                // non critical exception
+            }
+
+            // try to parse it as float
+
+            var parsedDouble = double.NaN;
+
+            try
+            {
+                parsedDouble = double.Parse(payload);
+            }
+            catch (Exception)
+            {
+                // non critical exception
+            }
+
+            PointData? point;
+
+            if (!double.IsNaN(parsedDouble))
+            {
+                point = PointData
+                    .Measurement(topic)
+                    .Field("value", parsedDouble)
+                    .Timestamp(DateTime.UtcNow, WritePrecision.Ns)
+                    .Tag("topic", topic);
+            }
+
+            // trying to use the InfluxDB Line Protocol
+            else if (json != null)
+            {
+                point = null;
+
+                // const string line = "temperature,city=Paris temperature=25.15, {timestamp}";
+                var lineStringBuilder = new StringBuilder();
+                lineStringBuilder.Append(topic).Append(',').Append("topic=")
+                    .Append(topic).Append(' ');
+
+                lineStringBuilder.Append(ProcessJson(json));
+
+                lineStringBuilder.Append(' ');
+
+                var currentTime = DateTime.Now;
+
+                lineStringBuilder.Append(((DateTimeOffset)currentTime).ToUnixTimeSeconds());
+
+                _logger.LogDebug("The string value of the below is: \n : {StringValue}", payload);
+
+                // we supply the value after the statment aka segregation of values 
+                _logger.LogDebug("The json value is: \n {JsonValue}", lineStringBuilder.ToString());
+
+                _influxDbClient.GetWriteApiAsync().WriteRecordAsync(lineStringBuilder.ToString(),
+                    bucket: _influxDbSecrets.Bucket, org: _influxDbSecrets.Organization,
+                    cancellationToken: cancellationToken);
+            }
+            else
+            {
+                point = null;
+                _logger.LogDebug("This topic is string: {Topic} with message", payload);
+            }
+
+            if (point != null)
+                _influxDbClient.GetWriteApiAsync().WritePointAsync(point, _influxDbSecrets.Bucket,
+                    _influxDbSecrets.Organization, cancellationToken);
+            // GC.Collect();
+            // GC.Collect();
+            return Task.CompletedTask;
+        };
+        // GC.Collect();
+        return Task.CompletedTask;
+    }
+
+    // Assuming json is a JObject containing the nested JSON structure
+    private static string ProcessJson(JObject json)
+    {
+        var sb = new StringBuilder();
+        foreach (var property in json.Properties())
             if (property.Value.Type == JTokenType.Object)
             {
                 // If the property value is an object, recursively process it
@@ -224,35 +224,12 @@ public class MqttToInfluxDbBackgroundService : IHostedService, IDisposable
             {
                 // Otherwise, it's a leaf node, so process it
                 if (property.Value.ToString() == "")
-                {
                     sb.Append(property.Path).Append('=').Append("null").Append(',');
-                }
                 else
-                {
                     sb.Append(property.Path).Append('=').Append(property.Value).Append(',');
-                }
             }
-        }
-        if (sb.Length > 1)
-        {
-            sb.Length -= 1; // Remove the last 
-        }
-        return sb.ToString();
-    }
 
-    public void Dispose()
-    {
-        _logger.LogDebug("Disposing");
-        _mqttClient.Dispose();
-        _influxDbClient.Dispose();
-        GC.SuppressFinalize(this);
-        _logger.LogDebug("Disposed");
-        // _mqttClient = null;
-        // _influxDbClient = null;
-        // _mqttClientOptions = null;
-        // _logger = null;
-        // _mqttSecrets = null;
-        // _influxDbSecrets = null;
-        GC.Collect();
+        if (sb.Length > 1) sb.Length -= 1; // Remove the last 
+        return sb.ToString();
     }
 }

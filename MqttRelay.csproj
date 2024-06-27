@@ -1,48 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 
-    <IsPublishable>true</IsPublishable>
-    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
-<!--    <ContainerRegistry>registry.mycorp.com:1234</ContainerRegistry>-->
-<!--    <ContainerRepository>my-super-awesome-app</ContainerRepository>-->
+        <IsPublishable>true</IsPublishable>
+        <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+        <!--    <ContainerRegistry>registry.mycorp.com:1234</ContainerRegistry>-->
+        <!--    <ContainerRepository>my-super-awesome-app</ContainerRepository>-->
 
-<!--    <ContainerImageTag>$(Version);latest</ContainerImageTag>-->
-    <ContainerImageTags>$(Version)</ContainerImageTags>
+        <!--    <ContainerImageTag>$(Version);latest</ContainerImageTag>-->
+        <ContainerImageTags>$(Version)</ContainerImageTags>
 
-<!--    <ContainerLabel Include="org.contoso.businessunit" Value="contoso-university" />-->
-<!--    <ContainerWorkingDirectory>/bin</ContainerWorkingDirectory>-->
+        <!--    <ContainerLabel Include="org.contoso.businessunit" Value="contoso-university" />-->
+        <!--    <ContainerWorkingDirectory>/bin</ContainerWorkingDirectory>-->
 
-<!--    https://github.com/dotnet/sdk-container-builds/blob/main/docs/ContainerCustomization.md-->
-<!--    <ContainerPort>8080</ContainerPort>-->
+        <!--    https://github.com/dotnet/sdk-container-builds/blob/main/docs/ContainerCustomization.md-->
+        <!--    <ContainerPort>8080</ContainerPort>-->
 
-<!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
-<!--    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>-->
-    
-<!--    <PublishTrimmed>true</PublishTrimmed>-->
-<!--    <SelfContained>true</SelfContained>-->
-    <UserSecretsId>14127855-79b9-43bc-aa6b-ce980f9dddf0</UserSecretsId>
-  </PropertyGroup>
+        <!--    <ContainerEnvironmentVariable Include="LOGGER_VERBOSITY" Value="Trace" />-->
+        <!--    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>-->
+
+        <!--    <PublishTrimmed>true</PublishTrimmed>-->
+        <!--    <SelfContained>true</SelfContained>-->
+        <UserSecretsId>14127855-79b9-43bc-aa6b-ce980f9dddf0</UserSecretsId>
+    </PropertyGroup>
 
 
-  <ItemGroup>
-    <ContainerPort Include="8080" Type="tcp" />
-<!--    <ContainerPort Include="8081" Type="tcp" />-->
-<!--    <ContainerEnvironmentVariable Include="ASPNETCORE_URLS" Value="http://+:8080;https://+:8081" />-->
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="InfluxDB.Client" Version="4.16.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.6" />
-    <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.302" />
-    <PackageReference Include="MQTTnet" Version="4.3.6.1152" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
+    <ItemGroup>
+        <ContainerPort Include="8080" Type="tcp"/>
+        <!--    <ContainerPort Include="8081" Type="tcp" />-->
+        <!--    <ContainerEnvironmentVariable Include="ASPNETCORE_URLS" Value="http://+:8080;https://+:8081" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="InfluxDB.Client" Version="4.16.0"/>
+        <!--    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />-->
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.6"/>
+        <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.302"/>
+        <PackageReference Include="MQTTnet" Version="4.3.6.1152"/>
+        <!--    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />-->
+    </ItemGroup>
 
 </Project>
